@@ -1,0 +1,94 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "filter-alerts/alert-bar",
+	"title": "Alert Bar",
+	"category": "filter-alerts",
+	"icon": "warning",
+	"description": "Displays the top section of a filter alert block.",
+	"textdomain": "filter-alerts",
+	"editorScript": "filter-alerts-alert-bar-editor",
+	"viewScript": "filter-alerts-alert-bar-view",
+	"style": "filter-alerts-alert-bar",
+	"attributes": {
+		"backgroundType": {
+			"type": "string",
+			"default": "gradient"
+		},
+		"solidColor": {
+			"type": "string",
+			"default": "#6f8cc3"
+		},
+		"gradientStart": {
+			"type": "string",
+			"default": "#6f8cc3"
+		},
+		"gradientEnd": {
+			"type": "string",
+			"default": "#9fb5df"
+		},
+		"textColor": {
+			"type": "string",
+			"default": "#ffffff"
+		},
+		"fontSize": {
+			"type": "number",
+			"default": 13
+		},
+		"toggleShowBackgroundType": {
+			"type": "string",
+			"default": "solid"
+		},
+		"toggleShowSolidColor": {
+			"type": "string",
+			"default": "#7b7b7b"
+		},
+		"toggleShowGradientStart": {
+			"type": "string",
+			"default": "#7b7b7b"
+		},
+		"toggleShowGradientEnd": {
+			"type": "string",
+			"default": "#5f5f5f"
+		},
+		"toggleHideBackgroundType": {
+			"type": "string",
+			"default": "solid"
+		},
+		"toggleHideSolidColor": {
+			"type": "string",
+			"default": "#7b7b7b"
+		},
+		"toggleHideGradientStart": {
+			"type": "string",
+			"default": "#7b7b7b"
+		},
+		"toggleHideGradientEnd": {
+			"type": "string",
+			"default": "#5f5f5f"
+		},
+		"inactiveBackgroundType": {
+			"type": "string",
+			"default": "solid"
+		},
+		"inactiveSolidColor": {
+			"type": "string",
+			"default": "#cccccc"
+		},
+		"inactiveGradientStart": {
+			"type": "string",
+			"default": "#000000"
+		},
+		"inactiveGradientEnd": {
+			"type": "string",
+			"default": "#333333"
+		}
+	},
+	"supports": {
+		"align": [
+			"wide",
+			"full"
+		],
+		"html": false
+	}
+}

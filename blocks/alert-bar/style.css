@@ -1,0 +1,283 @@
+.filter-alerts-alert-table {
+	box-sizing: border-box;
+	width: 100%;
+}
+
+.filter-alerts-alert-table__toolbar {
+	align-items: center;
+	display: flex;
+	justify-content: flex-end;
+	margin-bottom: 16px;
+	width: 100%;
+}
+
+.filter-alerts-alert-toggle {
+	align-items: center;
+	display: inline-flex;
+	gap: 8px;
+}
+
+.filter-alerts-alert-toggle__label {
+	color: #0b1c38;
+	font-family: "Open Sans", sans-serif;
+	font-size: 14px;
+	font-weight: 400;
+	letter-spacing: 0;
+	line-height: 1;
+}
+
+.filter-alerts-alert-toggle__switch {
+	align-items: center;
+	appearance: none;
+	background: #7b7b7b;
+	border: 0;
+	border-radius: 999px;
+	box-sizing: border-box;
+	color: #fff;
+	cursor: pointer;
+	display: inline-flex;
+	font-family: "Open Sans", sans-serif;
+	font-size: 12px;
+	font-weight: 700;
+	gap: 4px;
+	height: 26px;
+	justify-content: flex-start;
+	letter-spacing: 0;
+	line-height: 1;
+	margin: 0;
+	padding: 3px 7px 3px 3px;
+	text-transform: uppercase;
+}
+
+.filter-alerts-alert-toggle__switch[aria-pressed="true"] {
+	background: var(--filter-alerts-toggle-hide-background, #7b7b7b);
+	padding: 3px 3px 3px 7px;
+}
+
+.filter-alerts-alert-toggle__switch[aria-pressed="false"] {
+	background: var(--filter-alerts-toggle-show-background, #7b7b7b);
+}
+
+.filter-alerts-alert-toggle__thumb {
+	background: #fff;
+	border-radius: 50%;
+	box-shadow: 0 1px 2px rgba(11, 28, 56, 0.24);
+	display: block;
+	flex: 0 0 auto;
+	height: 20px;
+	width: 20px;
+}
+
+.filter-alerts-alert-toggle__switch[aria-pressed="true"] .filter-alerts-alert-toggle__thumb {
+	order: 2;
+}
+
+.filter-alerts-alert-bar {
+	align-items: center;
+	background: linear-gradient(90deg, #6f8cc3 0%, #9fb5df 100%);
+	box-sizing: border-box;
+	color: #fff;
+	display: grid;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	font-size: 13px;
+	font-weight: 700;
+	grid-template-columns: minmax(170px, 24%) minmax(170px, 1fr) minmax(120px, 18%);
+	height: 56px;
+	letter-spacing: 0;
+	line-height: 1;
+	margin: 0;
+	padding: 0 19px;
+	text-transform: uppercase;
+	width: 100%;
+}
+
+.filter-alerts-alert-table__body {
+	background: #fff;
+	border: 1px solid #d9e0ec;
+	border-top: 0;
+	box-sizing: border-box;
+	color: #1f2937;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	width: 100%;
+}
+
+.filter-alerts-alert-bar__cell {
+	align-items: center;
+	display: flex;
+	min-width: 0;
+	white-space: nowrap;
+}
+
+.filter-alerts-alert-bar__cell--alert {
+	gap: 10px;
+	justify-content: flex-start;
+}
+
+.filter-alerts-alert-bar__cell--details,
+.filter-alerts-alert-bar__cell--date {
+	justify-content: center;
+}
+
+.filter-alerts-alert-bar__icon {
+	display: block;
+	flex: 0 0 auto;
+	height: 23px;
+	width: 23px;
+}
+
+.filter-alerts-alert-row {
+	align-items: stretch;
+	box-sizing: border-box;
+	display: grid;
+	grid-template-columns: minmax(170px, 24%) minmax(170px, 1fr) minmax(120px, 18%);
+	max-height: 800px;
+	min-height: 56px;
+	opacity: 1;
+	overflow: hidden;
+	transition: max-height 220ms ease, min-height 220ms ease, opacity 180ms ease;
+	width: 100%;
+}
+
+.filter-alerts-alert-row + .filter-alerts-alert-row {
+	border-top: 1px solid #e6ebf3;
+}
+
+.filter-alerts-alert-row--inactive {
+	background: var(--filter-alerts-inactive-background, rgba(0, 0, 0, 0.2));
+	border-top-width: 0;
+	max-height: 0;
+	min-height: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.filter-alerts-alert-row--inactive-visible {
+	border-top-width: 1px;
+	max-height: 800px;
+	min-height: 56px;
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.filter-alerts-alert-row--inactive .filter-alerts-alert-row__cell {
+	padding-bottom: 0;
+	padding-top: 0;
+	transition: padding 220ms ease;
+}
+
+.filter-alerts-alert-row--inactive-visible .filter-alerts-alert-row__cell {
+	padding-bottom: 16px;
+	padding-top: 16px;
+}
+
+.filter-alerts-alert-row__cell {
+	align-items: flex-start;
+	box-sizing: border-box;
+	display: flex;
+	font-size: 14px;
+	line-height: 1.35;
+	min-width: 0;
+	padding: 16px 19px;
+}
+
+.filter-alerts-alert-row__cell--alert {
+	align-items: flex-start;
+	color: #0b1c38;
+	font-family: "Open Sans", sans-serif;
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: 0;
+	line-height: 1.15;
+}
+
+.filter-alerts-alert-row__cell--details {
+	color: #0b1c38;
+	display: block;
+	font-family: "Open Sans", sans-serif;
+	font-size: 14px;
+	font-weight: 400;
+	letter-spacing: 0;
+	line-height: 1.25;
+}
+
+.filter-alerts-alert-row__cell--details p {
+	margin: 0 0 12px;
+}
+
+.filter-alerts-alert-row__cell--details > :last-child {
+	margin-bottom: 0;
+}
+
+.filter-alerts-alert-row__cell--details a {
+	color: #0075d8;
+	font-family: "Open Sans", sans-serif;
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: 0;
+	line-height: 1.25;
+	text-decoration: underline;
+	text-decoration-offset: 2px;
+	text-decoration-skip-ink: auto;
+	text-decoration-style: solid;
+	text-decoration-thickness: 2px;
+}
+
+.filter-alerts-alert-row__cell--date {
+	align-items: flex-start;
+	color: #0b1c38;
+	font-family: "Open Sans", sans-serif;
+	font-size: 14px;
+	font-weight: 400;
+	justify-content: center;
+	letter-spacing: 0;
+	line-height: 1.15;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.filter-alerts-alert-row--empty {
+	grid-template-columns: 1fr;
+}
+
+.filter-alerts-alert-row__cell--empty {
+	color: #6b7280;
+	font-style: italic;
+}
+
+.filter-alerts-alert-bar-control {
+	margin-top: 16px;
+}
+
+.filter-alerts-alert-bar-control__label {
+	font-size: 11px;
+	font-weight: 500;
+	margin: 0 0 8px;
+	text-transform: uppercase;
+}
+
+@media (max-width: 600px) {
+	.filter-alerts-alert-bar {
+		font-size: 12px;
+		grid-template-columns: minmax(92px, 1fr) minmax(92px, 1fr) minmax(70px, 0.7fr);
+		height: 52px;
+		padding: 0 12px;
+	}
+
+	.filter-alerts-alert-bar__cell--alert {
+		gap: 8px;
+	}
+
+	.filter-alerts-alert-bar__icon {
+		height: 20px;
+		width: 20px;
+	}
+
+	.filter-alerts-alert-row {
+		grid-template-columns: minmax(92px, 1fr) minmax(92px, 1fr) minmax(70px, 0.7fr);
+	}
+
+	.filter-alerts-alert-row__cell {
+		font-size: 13px;
+		padding: 12px;
+	}
+}
