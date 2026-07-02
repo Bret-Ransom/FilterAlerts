@@ -122,29 +122,55 @@ span.filter-alerts-site-banner__icon {
 
 .filter-alerts-site-banner__alert-title {
 	color: #0b1c38;
+	display: -webkit-box;
 	font-family: "Open Sans", sans-serif;
 	font-size: 14px;
 	font-weight: 700;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
 	letter-spacing: 0;
 	line-height: 1.15;
 	margin: 0 0 8px;
+	overflow: hidden;
 }
 
 .filter-alerts-site-banner__alert-description {
 	color: #0b1c38;
+	display: -webkit-box;
 	font-family: "Open Sans", sans-serif;
 	font-size: 14px;
 	font-weight: 400;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
 	letter-spacing: 0;
 	line-height: 1.25;
+	margin: 0;
+	overflow: hidden;
 }
 
-.filter-alerts-site-banner__alert-description p {
-	margin: 0 0 10px;
+.filter-alerts-site-banner__footer {
+	box-sizing: border-box;
+	display: flex;
+	justify-content: flex-end;
+	padding: 0 20px 18px;
+	width: 100%;
 }
 
-.filter-alerts-site-banner__alert-description > :last-child {
-	margin-bottom: 0;
+.filter-alerts-site-banner__link {
+	color: var(--filter-alerts-site-banner-link-color, #0b1c38);
+	font-family: "Open Sans", sans-serif;
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: 0;
+	line-height: 1.2;
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 2px;
+}
+
+.filter-alerts-site-banner__link:hover,
+.filter-alerts-site-banner__link:focus {
+	color: var(--filter-alerts-site-banner-link-hover-color, #0075d8);
 }
 
 @media (max-width: 600px) {
@@ -166,6 +192,10 @@ span.filter-alerts-site-banner__icon {
 
 	.filter-alerts-site-banner__alerts {
 		grid-template-columns: 1fr;
+		padding: 0 14px 14px;
+	}
+
+	.filter-alerts-site-banner__footer {
 		padding: 0 14px 14px;
 	}
 }

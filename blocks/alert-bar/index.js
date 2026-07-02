@@ -54,6 +54,14 @@
 		gradient_end: '#d4ebff',
 		badge_color: '#dce6fb',
 		arrow_color: '#0075d8',
+		dropdown_link_text: '',
+		dropdown_link_post_id: 0,
+		dropdown_link_color: '#0b1c38',
+		dropdown_link_hover_color: '#0075d8',
+	};
+
+	const stripTags = function ( value ) {
+		return String( value || '' ).replace( /<[^>]*>/g, '' );
 	};
 
 	const ColorControl = function ( props ) {
@@ -99,6 +107,12 @@
 			isSavingSiteBannerSettings,
 			setIsSavingSiteBannerSettings,
 		] = useState( false );
+		const [ linkTargetOptions, setLinkTargetOptions ] = useState( [
+			{
+				label: __( 'Select content', 'filter-alerts' ),
+				value: '0',
+			},
+		] );
 		const blockProps = useBlockProps( {
 			className: 'filter-alerts-alert-table-editor',
 		} );
@@ -141,6 +155,34 @@
 						...response[ SITE_BANNER_OPTION ],
 					} );
 				}
+			} );
+
+			apiFetch( {
+				path:
+					'/wp/v2/search?type=post&subtype=any&per_page=100&_fields=id,title,subtype',
+			} ).then( function ( results ) {
+				setLinkTargetOptions(
+					[
+						{
+							label: __( 'Select content', 'filter-alerts' ),
+							value: '0',
+						},
+					].concat(
+						results.map( function ( result ) {
+							const title =
+								stripTags( result.title ) ||
+								__( '(no title)', 'filter-alerts' );
+							const subtype = result.subtype
+								? ' (' + result.subtype + ')'
+								: '';
+
+							return {
+								label: title + subtype,
+								value: String( result.id ),
+							};
+						} )
+					)
+				);
 			} );
 		}, [] );
 
@@ -704,6 +746,55 @@
 						onChange: function ( value ) {
 							updateSiteBannerSettings( {
 								arrow_color: value,
+							} );
+						},
+					} ),
+					el( TextControl, {
+						label: __( 'Dropdown Link Text', 'filter-alerts' ),
+						value: siteBannerSettings.dropdown_link_text,
+						onChange: function ( value ) {
+							updateSiteBannerSettings( {
+								dropdown_link_text: value,
+							} );
+						},
+					} ),
+					el( SelectControl, {
+						label: __( 'Dropdown Link Target', 'filter-alerts' ),
+						value: String(
+							siteBannerSettings.dropdown_link_post_id || 0
+						),
+						options: linkTargetOptions,
+						onChange: function ( value ) {
+							updateSiteBannerSettings( {
+								dropdown_link_post_id: parseInt( value, 10 ),
+							} );
+						},
+					} ),
+					el( ColorControl, {
+						label: __(
+							'Dropdown Link Text Color',
+							'filter-alerts'
+						),
+						value: siteBannerSettings.dropdown_link_color,
+						defaultValue:
+							DEFAULT_SITE_BANNER_SETTINGS.dropdown_link_color,
+						onChange: function ( value ) {
+							updateSiteBannerSettings( {
+								dropdown_link_color: value,
+							} );
+						},
+					} ),
+					el( ColorControl, {
+						label: __(
+							'Dropdown Link Hover Color',
+							'filter-alerts'
+						),
+						value: siteBannerSettings.dropdown_link_hover_color,
+						defaultValue:
+							DEFAULT_SITE_BANNER_SETTINGS.dropdown_link_hover_color,
+						onChange: function ( value ) {
+							updateSiteBannerSettings( {
+								dropdown_link_hover_color: value,
 							} );
 						},
 					} ),

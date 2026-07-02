@@ -93,8 +93,7 @@
 
 .filter-alerts-alert-table__body {
 	background: #fff;
-	border: 1px solid #d9e0ec;
-	border-top: 0;
+	border-bottom: 1px solid #d9e0ec;
 	box-sizing: border-box;
 	color: #1f2937;
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;

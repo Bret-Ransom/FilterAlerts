@@ -22,6 +22,19 @@ define( 'FILTER_ALERTS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'FILTER_ALERTS_SITE_BANNER_OPTION', 'filter_alerts_site_banner_settings' );
 
 /**
+ * Get the plugin-managed alert status terms.
+ *
+ * @return array
+ */
+function filter_alerts_get_default_status_terms() {
+	return array(
+		'active'   => __( 'Active', 'filter-alerts' ),
+		'inactive' => __( 'Inactive', 'filter-alerts' ),
+		'archived' => __( 'Archived', 'filter-alerts' ),
+	);
+}
+
+/**
  * Register custom post type and taxonomy.
  */
 function filter_alerts_register_content_types() {
@@ -112,11 +125,39 @@ function filter_alerts_register_content_types() {
 			'show_ui'           => true,
 			'show_admin_column' => true,
 			'show_in_rest'      => true,
+			'default_term'      => array(
+				'name' => __( 'Active', 'filter-alerts' ),
+				'slug' => 'active',
+			),
 			'rewrite'           => false,
 		)
 	);
 }
 add_action( 'init', 'filter_alerts_register_content_types' );
+
+/**
+ * Ensure required alert status terms exist.
+ */
+function filter_alerts_ensure_default_status_terms() {
+	if ( ! taxonomy_exists( 'alert_status' ) ) {
+		return;
+	}
+
+	foreach ( filter_alerts_get_default_status_terms() as $slug => $name ) {
+		if ( term_exists( $slug, 'alert_status' ) ) {
+			continue;
+		}
+
+		wp_insert_term(
+			$name,
+			'alert_status',
+			array(
+				'slug' => $slug,
+			)
+		);
+	}
+}
+add_action( 'init', 'filter_alerts_ensure_default_status_terms', 20 );
 
 /**
  * Add a dedicated block inserter category for Filter Alerts blocks.
@@ -151,14 +192,18 @@ add_filter( 'block_categories_all', 'filter_alerts_register_block_category' );
  */
 function filter_alerts_get_site_banner_defaults() {
 	return array(
-		'icon_url'         => '',
-		'multiple_label'   => __( '2 or more Active Alerts', 'filter-alerts' ),
-		'background_type'  => 'gradient',
-		'solid_color'      => '#d4ebff',
-		'gradient_start'   => '#eef7ff',
-		'gradient_end'     => '#d4ebff',
-		'badge_color'      => '#dce6fb',
-		'arrow_color'      => '#0075d8',
+		'icon_url'                  => '',
+		'multiple_label'            => __( '2 or more Active Alerts', 'filter-alerts' ),
+		'background_type'           => 'gradient',
+		'solid_color'               => '#d4ebff',
+		'gradient_start'            => '#eef7ff',
+		'gradient_end'              => '#d4ebff',
+		'badge_color'               => '#dce6fb',
+		'arrow_color'               => '#0075d8',
+		'dropdown_link_text'        => '',
+		'dropdown_link_post_id'     => 0,
+		'dropdown_link_color'       => '#0b1c38',
+		'dropdown_link_hover_color' => '#0075d8',
 	);
 }
 
@@ -168,10 +213,16 @@ function filter_alerts_get_site_banner_defaults() {
  * @return array
  */
 function filter_alerts_get_site_banner_settings() {
-	return wp_parse_args(
+	$settings = wp_parse_args(
 		get_option( FILTER_ALERTS_SITE_BANNER_OPTION, array() ),
 		filter_alerts_get_site_banner_defaults()
 	);
+
+	if ( empty( $settings['dropdown_link_post_id'] ) && ! empty( $settings['dropdown_link_page_id'] ) ) {
+		$settings['dropdown_link_post_id'] = absint( $settings['dropdown_link_page_id'] );
+	}
+
+	return $settings;
 }
 
 /**
@@ -192,16 +243,22 @@ function filter_alerts_sanitize_site_banner_settings( $settings ) {
 	$gradient_end   = isset( $settings['gradient_end'] ) ? sanitize_hex_color( $settings['gradient_end'] ) : $defaults['gradient_end'];
 	$badge_color    = isset( $settings['badge_color'] ) ? sanitize_hex_color( $settings['badge_color'] ) : $defaults['badge_color'];
 	$arrow_color    = isset( $settings['arrow_color'] ) ? sanitize_hex_color( $settings['arrow_color'] ) : $defaults['arrow_color'];
+	$dropdown_link_color       = isset( $settings['dropdown_link_color'] ) ? sanitize_hex_color( $settings['dropdown_link_color'] ) : $defaults['dropdown_link_color'];
+	$dropdown_link_hover_color = isset( $settings['dropdown_link_hover_color'] ) ? sanitize_hex_color( $settings['dropdown_link_hover_color'] ) : $defaults['dropdown_link_hover_color'];
 
 	return array(
-		'icon_url'         => isset( $settings['icon_url'] ) ? esc_url_raw( $settings['icon_url'] ) : $defaults['icon_url'],
-		'multiple_label'   => isset( $settings['multiple_label'] ) && '' !== trim( $settings['multiple_label'] ) ? sanitize_text_field( $settings['multiple_label'] ) : $defaults['multiple_label'],
-		'background_type'  => $background_type,
-		'solid_color'      => $solid_color ? $solid_color : $defaults['solid_color'],
-		'gradient_start'   => $gradient_start ? $gradient_start : $defaults['gradient_start'],
-		'gradient_end'     => $gradient_end ? $gradient_end : $defaults['gradient_end'],
-		'badge_color'      => $badge_color ? $badge_color : $defaults['badge_color'],
-		'arrow_color'      => $arrow_color ? $arrow_color : $defaults['arrow_color'],
+		'icon_url'                  => isset( $settings['icon_url'] ) ? esc_url_raw( $settings['icon_url'] ) : $defaults['icon_url'],
+		'multiple_label'            => isset( $settings['multiple_label'] ) && '' !== trim( $settings['multiple_label'] ) ? sanitize_text_field( $settings['multiple_label'] ) : $defaults['multiple_label'],
+		'background_type'           => $background_type,
+		'solid_color'               => $solid_color ? $solid_color : $defaults['solid_color'],
+		'gradient_start'            => $gradient_start ? $gradient_start : $defaults['gradient_start'],
+		'gradient_end'              => $gradient_end ? $gradient_end : $defaults['gradient_end'],
+		'badge_color'               => $badge_color ? $badge_color : $defaults['badge_color'],
+		'arrow_color'               => $arrow_color ? $arrow_color : $defaults['arrow_color'],
+		'dropdown_link_text'        => isset( $settings['dropdown_link_text'] ) ? sanitize_text_field( $settings['dropdown_link_text'] ) : $defaults['dropdown_link_text'],
+		'dropdown_link_post_id'     => isset( $settings['dropdown_link_post_id'] ) ? absint( $settings['dropdown_link_post_id'] ) : absint( isset( $settings['dropdown_link_page_id'] ) ? $settings['dropdown_link_page_id'] : $defaults['dropdown_link_post_id'] ),
+		'dropdown_link_color'       => $dropdown_link_color ? $dropdown_link_color : $defaults['dropdown_link_color'],
+		'dropdown_link_hover_color' => $dropdown_link_hover_color ? $dropdown_link_hover_color : $defaults['dropdown_link_hover_color'],
 	);
 }
 
@@ -220,28 +277,40 @@ function filter_alerts_register_site_banner_settings() {
 				'schema' => array(
 					'type'       => 'object',
 					'properties' => array(
-						'icon_url'        => array(
+						'icon_url'                  => array(
 							'type' => 'string',
 						),
-						'multiple_label'  => array(
+						'multiple_label'            => array(
 							'type' => 'string',
 						),
-						'background_type' => array(
+						'background_type'           => array(
 							'type' => 'string',
 						),
-						'solid_color'     => array(
+						'solid_color'               => array(
 							'type' => 'string',
 						),
-						'gradient_start'  => array(
+						'gradient_start'            => array(
 							'type' => 'string',
 						),
-						'gradient_end'    => array(
+						'gradient_end'              => array(
 							'type' => 'string',
 						),
-						'badge_color'     => array(
+						'badge_color'               => array(
 							'type' => 'string',
 						),
-						'arrow_color'     => array(
+						'arrow_color'               => array(
+							'type' => 'string',
+						),
+						'dropdown_link_text'        => array(
+							'type' => 'string',
+						),
+						'dropdown_link_post_id'     => array(
+							'type' => 'integer',
+						),
+						'dropdown_link_color'       => array(
+							'type' => 'string',
+						),
+						'dropdown_link_hover_color' => array(
 							'type' => 'string',
 						),
 					),
@@ -251,6 +320,48 @@ function filter_alerts_register_site_banner_settings() {
 	);
 }
 add_action( 'init', 'filter_alerts_register_site_banner_settings' );
+
+/**
+ * Get public content types that can be used as the dropdown link target.
+ *
+ * @return array
+ */
+function filter_alerts_get_dropdown_link_post_types() {
+	$post_types = get_post_types(
+		array(
+			'public' => true,
+		),
+		'objects'
+	);
+
+	unset( $post_types['attachment'] );
+
+	return $post_types;
+}
+
+/**
+ * Get selectable published content for the dropdown link target.
+ *
+ * @return array
+ */
+function filter_alerts_get_dropdown_link_posts() {
+	$post_types = array_keys( filter_alerts_get_dropdown_link_post_types() );
+
+	if ( empty( $post_types ) ) {
+		return array();
+	}
+
+	return get_posts(
+		array(
+			'post_type'        => $post_types,
+			'post_status'      => 'publish',
+			'posts_per_page'   => -1,
+			'orderby'          => 'title',
+			'order'            => 'ASC',
+			'suppress_filters' => false,
+		)
+	);
+}
 
 /**
  * Add plugin settings under the Site-Wide Alerts menu.
@@ -294,6 +405,8 @@ add_action( 'admin_enqueue_scripts', 'filter_alerts_enqueue_settings_assets' );
 function filter_alerts_render_settings_page() {
 	$settings = filter_alerts_get_site_banner_settings();
 	$defaults = filter_alerts_get_site_banner_defaults();
+	$link_post_types = filter_alerts_get_dropdown_link_post_types();
+	$link_posts      = filter_alerts_get_dropdown_link_posts();
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Filter Alert Settings', 'filter-alerts' ); ?></h1>
@@ -354,6 +467,49 @@ function filter_alerts_render_settings_page() {
 					<th scope="row"><label for="filter-alerts-site-banner-arrow-color"><?php esc_html_e( 'Arrow Color', 'filter-alerts' ); ?></label></th>
 					<td>
 						<input id="filter-alerts-site-banner-arrow-color" name="<?php echo esc_attr( FILTER_ALERTS_SITE_BANNER_OPTION ); ?>[arrow_color]" type="color" value="<?php echo esc_attr( $settings['arrow_color'] ); ?>" />
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="filter-alerts-site-banner-dropdown-link-text"><?php esc_html_e( 'Dropdown Link Text', 'filter-alerts' ); ?></label></th>
+					<td>
+						<input class="regular-text" id="filter-alerts-site-banner-dropdown-link-text" name="<?php echo esc_attr( FILTER_ALERTS_SITE_BANNER_OPTION ); ?>[dropdown_link_text]" type="text" value="<?php echo esc_attr( $settings['dropdown_link_text'] ); ?>" />
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="filter-alerts-site-banner-dropdown-link-post-id"><?php esc_html_e( 'Dropdown Link Target', 'filter-alerts' ); ?></label></th>
+					<td>
+						<select id="filter-alerts-site-banner-dropdown-link-post-id" name="<?php echo esc_attr( FILTER_ALERTS_SITE_BANNER_OPTION ); ?>[dropdown_link_post_id]">
+							<option value="0"><?php esc_html_e( 'Select content', 'filter-alerts' ); ?></option>
+							<?php foreach ( $link_post_types as $post_type_name => $post_type ) : ?>
+								<?php
+								$posts_for_type = array_filter(
+									$link_posts,
+									static function ( $post ) use ( $post_type_name ) {
+										return $post_type_name === $post->post_type;
+									}
+								);
+								?>
+								<?php if ( ! empty( $posts_for_type ) ) : ?>
+									<optgroup label="<?php echo esc_attr( $post_type->labels->name ); ?>">
+										<?php foreach ( $posts_for_type as $link_post ) : ?>
+											<option value="<?php echo esc_attr( $link_post->ID ); ?>" <?php selected( $settings['dropdown_link_post_id'], $link_post->ID ); ?>><?php echo esc_html( get_the_title( $link_post ) ); ?></option>
+										<?php endforeach; ?>
+									</optgroup>
+								<?php endif; ?>
+							<?php endforeach; ?>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="filter-alerts-site-banner-dropdown-link-color"><?php esc_html_e( 'Dropdown Link Text Color', 'filter-alerts' ); ?></label></th>
+					<td>
+						<input id="filter-alerts-site-banner-dropdown-link-color" name="<?php echo esc_attr( FILTER_ALERTS_SITE_BANNER_OPTION ); ?>[dropdown_link_color]" type="color" value="<?php echo esc_attr( $settings['dropdown_link_color'] ); ?>" />
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="filter-alerts-site-banner-dropdown-link-hover-color"><?php esc_html_e( 'Dropdown Link Hover Color', 'filter-alerts' ); ?></label></th>
+					<td>
+						<input id="filter-alerts-site-banner-dropdown-link-hover-color" name="<?php echo esc_attr( FILTER_ALERTS_SITE_BANNER_OPTION ); ?>[dropdown_link_hover_color]" type="color" value="<?php echo esc_attr( $settings['dropdown_link_hover_color'] ); ?>" />
 					</td>
 				</tr>
 			</table>
@@ -445,6 +601,28 @@ function filter_alerts_render_alert_bar_block( $attributes ) {
 		)
 	);
 
+	$active_alert_posts   = array();
+	$inactive_alert_posts = array();
+
+	if ( $alerts->have_posts() ) {
+		foreach ( $alerts->posts as $alert_post ) {
+			$status_flags = filter_alerts_get_alert_status_flags( $alert_post->ID );
+
+			if ( $status_flags['archived'] ) {
+				continue;
+			}
+
+			if ( $status_flags['inactive'] ) {
+				$inactive_alert_posts[] = $alert_post;
+				continue;
+			}
+
+			$active_alert_posts[] = $alert_post;
+		}
+	}
+
+	$ordered_alert_posts = array_merge( $active_alert_posts, $inactive_alert_posts );
+
 	ob_start();
 	?>
 	<div <?php echo $wrapper_attributes; ?>>
@@ -468,40 +646,23 @@ function filter_alerts_render_alert_bar_block( $attributes ) {
 		</div>
 
 		<div class="filter-alerts-alert-table__body">
-			<?php if ( $alerts->have_posts() ) : ?>
+			<?php if ( ! empty( $ordered_alert_posts ) ) : ?>
 				<?php
-				$rendered_alert_count = 0;
+				global $post;
 
-				while ( $alerts->have_posts() ) :
-					$alerts->the_post();
-					$status_flags = filter_alerts_get_alert_status_flags( get_the_ID() );
-					$is_inactive  = $status_flags['inactive'];
-					$is_archived  = $status_flags['archived'];
-
-					if ( $is_archived ) {
-						continue;
-					}
-
-					$row_classes = 'filter-alerts-alert-row';
-
-					if ( $is_inactive ) {
-						$row_classes .= ' filter-alerts-alert-row--inactive';
-					}
-
-					++$rendered_alert_count;
+				foreach ( $ordered_alert_posts as $alert_post ) :
+					$post = $alert_post;
+					setup_postdata( $post );
+					$is_inactive = in_array( $alert_post, $inactive_alert_posts, true );
+					$row_classes = $is_inactive ? 'filter-alerts-alert-row filter-alerts-alert-row--inactive' : 'filter-alerts-alert-row';
 					?>
 					<div class="<?php echo esc_attr( $row_classes ); ?>"<?php echo $is_inactive ? ' data-filter-alerts-inactive-row' : ''; ?>>
 						<div class="filter-alerts-alert-row__cell filter-alerts-alert-row__cell--alert"><?php echo esc_html( get_the_title() ); ?></div>
 						<div class="filter-alerts-alert-row__cell filter-alerts-alert-row__cell--details"><?php echo wp_kses_post( apply_filters( 'the_content', get_the_content() ) ); ?></div>
 						<div class="filter-alerts-alert-row__cell filter-alerts-alert-row__cell--date"><?php echo esc_html( get_the_date( 'm/d/Y' ) ); ?></div>
 					</div>
-				<?php endwhile; ?>
+				<?php endforeach; ?>
 				<?php wp_reset_postdata(); ?>
-				<?php if ( 0 === $rendered_alert_count ) : ?>
-					<div class="filter-alerts-alert-row filter-alerts-alert-row--empty">
-						<div class="filter-alerts-alert-row__cell filter-alerts-alert-row__cell--empty"><?php esc_html_e( 'No site-wide alerts found.', 'filter-alerts' ); ?></div>
-					</div>
-				<?php endif; ?>
 			<?php else : ?>
 				<div class="filter-alerts-alert-row filter-alerts-alert-row--empty">
 					<div class="filter-alerts-alert-row__cell filter-alerts-alert-row__cell--empty"><?php esc_html_e( 'No site-wide alerts found.', 'filter-alerts' ); ?></div>
@@ -648,6 +809,8 @@ function filter_alerts_render_site_banner() {
 		'--filter-alerts-site-banner-background: ' . $background,
 		'--filter-alerts-site-banner-badge-background: ' . $settings['badge_color'],
 		'--filter-alerts-site-banner-arrow-color: ' . $settings['arrow_color'],
+		'--filter-alerts-site-banner-link-color: ' . $settings['dropdown_link_color'],
+		'--filter-alerts-site-banner-link-hover-color: ' . $settings['dropdown_link_hover_color'],
 	);
 	$default_settings = filter_alerts_get_site_banner_defaults();
 	$label            = $settings['multiple_label'];
@@ -663,6 +826,13 @@ function filter_alerts_render_site_banner() {
 	}
 
 	$dropdown_alert_ids = array_slice( $active_alert_ids, 0, 4 );
+	$dropdown_link_text = trim( $settings['dropdown_link_text'] );
+	$dropdown_link_url  = '';
+
+	if ( 0 < $settings['dropdown_link_post_id'] ) {
+		$dropdown_link_post_url = get_permalink( $settings['dropdown_link_post_id'] );
+		$dropdown_link_url      = $dropdown_link_post_url ? $dropdown_link_post_url : '';
+	}
 	?>
 	<div class="filter-alerts-site-banner-wrap" style="<?php echo esc_attr( implode( '; ', $styles ) ); ?>" data-filter-alerts-site-banner>
 		<div class="filter-alerts-site-banner" role="region" aria-label="<?php esc_attr_e( 'Active alerts', 'filter-alerts' ); ?>">
@@ -682,14 +852,22 @@ function filter_alerts_render_site_banner() {
 		<div class="filter-alerts-site-banner__panel" data-filter-alerts-site-banner-panel>
 			<div class="filter-alerts-site-banner__alerts" style="<?php echo esc_attr( '--filter-alerts-site-banner-alert-count: ' . count( $dropdown_alert_ids ) ); ?>">
 				<?php foreach ( $dropdown_alert_ids as $alert_id ) : ?>
+					<?php
+					$alert_description = trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( strip_shortcodes( get_post_field( 'post_content', $alert_id ) ) ) ) );
+					?>
 					<article class="filter-alerts-site-banner__alert-card">
 						<h2 class="filter-alerts-site-banner__alert-title"><?php echo esc_html( get_the_title( $alert_id ) ); ?></h2>
-						<div class="filter-alerts-site-banner__alert-description">
-							<?php echo wp_kses_post( apply_filters( 'the_content', get_post_field( 'post_content', $alert_id ) ) ); ?>
-						</div>
+						<?php if ( '' !== $alert_description ) : ?>
+							<p class="filter-alerts-site-banner__alert-description"><?php echo esc_html( $alert_description . '...' ); ?></p>
+						<?php endif; ?>
 					</article>
 				<?php endforeach; ?>
 			</div>
+			<?php if ( '' !== $dropdown_link_text && '' !== $dropdown_link_url ) : ?>
+				<div class="filter-alerts-site-banner__footer">
+					<a class="filter-alerts-site-banner__link" href="<?php echo esc_url( $dropdown_link_url ); ?>"><?php echo esc_html( $dropdown_link_text ); ?></a>
+				</div>
+			<?php endif; ?>
 		</div>
 	</div>
 	<?php
@@ -739,6 +917,7 @@ add_action( 'init', 'filter_alerts_register_blocks' );
  */
 function filter_alerts_activate() {
 	filter_alerts_register_content_types();
+	filter_alerts_ensure_default_status_terms();
 	flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'filter_alerts_activate' );
